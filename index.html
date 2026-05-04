@@ -428,6 +428,12 @@
     const MATCH_COUNT = MATCHUPS.length;
     const SYM = ['🥇','🥈','🥉'], CLS = ['g','s','b'];
 
+    // 球隊顏色查詢表
+    const TEAM_COLORS = {};
+    MATCHUPS.forEach(m => m.teams.forEach(t => {
+      TEAM_COLORS[t.zh] = { bg: t.color, text: t.text || '#fff' };
+    }));
+
     /* ── State ── */
     let winners = new Array(MATCH_COUNT).fill(null);
     let lengths  = new Array(MATCH_COUNT).fill(null);
@@ -693,11 +699,23 @@
           const label = w ? `${w}${lv ? ' G'+lv : ''}` : '—';
           const lenLabel = lv ? `G${lv}` : '—';
           if (!w) return `<div class="lb-pick pending">—</div>`;
-          if (results.winners[i] === null) return `<div class="lb-pick pending">${esc(w)}<span class="pick-len">${esc(lenLabel)}</span></div>`;
+          const tc = TEAM_COLORS[w] || { bg: '#5577aa', text: '#fff' };
+          if (results.winners[i] === null) {
+            // 還沒結果：顯示球隊顏色
+            return `<div class="lb-pick" style="background:${tc.bg};color:${tc.text};border:none;font-weight:900">${esc(w)}<span class="pick-len" style="color:${tc.text};opacity:.75">${esc(lenLabel)}</span></div>`;
+          }
           const winOk = w === results.winners[i];
           const lenOk = results.lengths[i] !== null && lv === results.lengths[i];
-          const cls = !winOk ? 'wrong' : lenOk ? 'correct' : 'partial';
-          return `<div class="lb-pick ${cls}">${esc(w)}<span class="pick-len">${esc(lenLabel)}</span></div>`;
+          if (!winOk) {
+            // 猜錯：球隊顏色 + 紅色刪除線蓋板
+            return `<div class="lb-pick wrong" style="background:color-mix(in srgb,${tc.bg} 25%,rgba(200,16,46,.12));border:1px solid rgba(200,16,46,.3)">${esc(w)}<span class="pick-len">${esc(lenLabel)}</span></div>`;
+          }
+          if (lenOk) {
+            // 全對：球隊顏色 + 綠色邊框
+            return `<div class="lb-pick correct" style="background:color-mix(in srgb,${tc.bg} 30%,rgba(22,131,79,.2));border:1px solid rgba(22,131,79,.5)">✓ ${esc(w)}<span class="pick-len" style="color:#16834f">${esc(lenLabel)}</span></div>`;
+          }
+          // 勝隊對但場數錯：球隊顏色 + 黃框
+          return `<div class="lb-pick partial" style="background:color-mix(in srgb,${tc.bg} 30%,rgba(180,140,0,.15));border:1px solid rgba(180,140,0,.5)">✓ ${esc(w)}<span class="pick-len">${esc(lenLabel)}</span></div>`;
         }).join('');
 
         return `
