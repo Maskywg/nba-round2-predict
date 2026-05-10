@@ -364,6 +364,7 @@
         <h2>🏀 預測排行榜</h2>
         <span class="lb-cnt" id="lb-cnt"></span>
       </div>
+      <div id="rank-status" style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.5px"></div>
       <div class="result-row" id="result-row"></div>
       <div class="lb-table" id="lb-body">
         <div class="lb-empty">🏀 還沒有人送出預測，快來第一個！</div>
@@ -676,6 +677,18 @@
 
     function renderLB() {
       const decided = results.winners.filter(r => r !== null).length;
+
+      // 暫時排名 / 最終排名 提示
+      const statusEl = document.getElementById('rank-status');
+      if (decided === 0) {
+        statusEl.textContent = '';
+      } else if (decided < MATCH_COUNT) {
+        statusEl.innerHTML = `⏳ 暫時排名｜${decided}/${MATCH_COUNT} 場已確認，其餘賽果出爐後積分繼續更新`;
+        statusEl.style.color = 'var(--muted)';
+      } else {
+        statusEl.innerHTML = `🏆 最終排名｜全部 ${MATCH_COUNT} 場賽果已確認`;
+        statusEl.style.color = 'var(--green)';
+      }
 
       document.getElementById('result-row').innerHTML = MATCHUPS.map((m,i) =>
         results.winners[i]
