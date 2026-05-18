@@ -727,10 +727,11 @@
         const votedCount = (e.winners||[]).filter(v => v !== null && v !== undefined).length;
         const perfect = allResultsDone && e.wins === MATCH_COUNT;
         const crownHtml = perfect ? `<span class="crown">👑</span><span class="hao">厲害！</span>` : '';
-        // 徽章：以晉級數為主，場數為輔
-        const scoreCls = `s${Math.min(e.wins * 2 + (e.lens > 0 ? 1 : 0), 8)}`;
+        // 徽章顏色純依贏隊數（場數只顯示文字加分，不影響顏色等級）
+        const WIN_CLS = ['s0','s2','s4','s6','s8'];
+        const scoreCls = WIN_CLS[Math.min(e.wins, MATCH_COUNT)];
         const scoreBadge = decided > 0
-          ? `<span class="score-badge ${scoreCls}">${e.wins}隊${e.lens > 0 ? ` +${e.lens}場` : ''}</span>` : '';
+          ? `<span class="score-badge ${scoreCls}">${e.wins}隊晉級${e.lens > 0 ? ` · +${e.lens}場` : ''}</span>` : '';
         const rowStyle = (perfect ? 'style="background:rgba(255,215,0,.08);border-left:3px solid #FFD700"' : (e.wins === decided && decided > 0 ? 'style="border-left:3px solid rgba(22,131,79,.4)"' : ''));
 
         const cells = (e.winners||[]).map((w,i) => {
