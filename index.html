@@ -699,19 +699,21 @@
       }
 
       const scored = latestDB.map(e => {
-        let pts = 0;
+        let wins = 0;   // 猜中晉級隊伍數（主要排名依據）
+        let lens = 0;   // 猜中系列賽場數（同晉級數時才比）
         (e.winners||[]).forEach((w,i) => {
           if (results.winners[i] && w === results.winners[i]) {
-            pts++;
-            if (results.lengths[i] !== null && e.lengths && e.lengths[i] === results.lengths[i]) pts++;
+            wins++;
+            if (results.lengths[i] !== null && e.lengths && e.lengths[i] === results.lengths[i]) lens++;
           }
         });
-        return { ...e, pts };
-      }).sort((a,b) => b.pts - a.pts || a.time - b.time);
+        return { ...e, wins, lens };
+      // 第一優先：猜中晉級隊數；同分時才看場數；再同分才看時間
+      }).sort((a,b) => b.wins - a.wins || b.lens - a.lens || a.time - b.time);
 
       let rank = 0;
       scored.forEach((e,i) => {
-        if (i === 0 || e.pts !== scored[i-1].pts) rank = i;
+        if (i === 0 || e.wins !== scored[i-1].wins || e.lens !== scored[i-1].lens) rank = i;
         e._rank = rank;
       });
 
@@ -722,13 +724,14 @@
         const rankHtml = decided > 0 ? (SYM[r] || (r+1)) : (scored.indexOf(e)+1);
         const rankCls  = decided > 0 ? (CLS[r] || '') : '';
         const isMe = myName && e.name.toLowerCase() === myName.toLowerCase();
-        const perfect = allResultsDone && e.pts === MATCH_COUNT * 2;
-        const crownHtml = perfect ? `<span class="crown">👑</span><span class="hao">厲害！</span>` : '';
-        const scoreCls = `s${Math.min(e.pts, 8)}`;
         const votedCount = (e.winners||[]).filter(v => v !== null && v !== undefined).length;
+        const perfect = allResultsDone && e.wins === MATCH_COUNT;
+        const crownHtml = perfect ? `<span class="crown">👑</span><span class="hao">厲害！</span>` : '';
+        // 徽章：以晉級數為主，場數為輔
+        const scoreCls = `s${Math.min(e.wins * 2 + (e.lens > 0 ? 1 : 0), 8)}`;
         const scoreBadge = decided > 0
-          ? `<span class="score-badge ${scoreCls}">${e.pts}/${votedCount * 2} 分</span>` : '';
-        const rowStyle = perfect ? 'style="background:rgba(255,215,0,.08);border-left:3px solid #FFD700"' : '';
+          ? `<span class="score-badge ${scoreCls}">${e.wins}隊${e.lens > 0 ? ` +${e.lens}場` : ''}</span>` : '';
+        const rowStyle = (perfect ? 'style="background:rgba(255,215,0,.08);border-left:3px solid #FFD700"' : (e.wins === decided && decided > 0 ? 'style="border-left:3px solid rgba(22,131,79,.4)"' : ''));
 
         const cells = (e.winners||[]).map((w,i) => {
           const lv = e.lengths ? e.lengths[i] : null;
